@@ -33,7 +33,6 @@ var jswag = {
      *  speed:      The amount of time in miliseconds that should occur between each display (integer)
      *  
      */
-     
     autogallery: function(path, $element, speed){
         var queue = function(images, data){
                     $element.fadeOut('medium', function(){
@@ -66,12 +65,15 @@ var jswag = {
      *  width:      The width of each image in the gallery (integer)
      *  
      */
-     
     galleryView: function(path, $element, height, width){
         var display = function(images, data){
             images.forEach(function(img){
                 var i = $("<img>");
-                i.css('height', data.height + 'px').css('width', data.width + 'px').css('margin', ' 10px 20px');
+                if(height != undefined)
+                    i.css('height', data.height + 'px');
+                if(width != undefined)
+                    i.css('width', data.width + 'px')
+                i.css('margin', ' 10px 20px');
                 i.attr('src', data.path + "/" + img.text);
                 $element.append(i);
             });
