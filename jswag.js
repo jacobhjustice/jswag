@@ -17,9 +17,10 @@ var jswag = {
      *  color:      The CSS color property of the word
      *  speed:      The amount of time in miliseconds that should occur between each letter
      *  cursor:     A string containing the desired CSS color value of the cursor, or a boolean value of false if no cursor is desired
+     *  callback:   An optional callback function to run on completion
      *
      */
-    autotype: function(word, $element, color, speed, cursor){
+    autotype: function(word, $element, color, speed, cursor, callback){
         
         //Handles the tick mark that visually indicates typing
         var typeBorder = function($el, str, ticksLeft, cursor){
@@ -35,6 +36,10 @@ var jswag = {
                         typeBorder($el, str, 3, cursor);
                     else
                         typeBorder($el, str, ticksLeft - 1, cursor);
+                }
+                else{
+                    if(typeof(callback) == "function")
+                        callback();
                 }
             }, 500);
         };
