@@ -13,15 +13,45 @@ var jswag = {
      *  Types out a word into an HTML element specified
      *
      *  word:       A string of the word to type out
-     *  $element:   The JQuery selector of the HTML element to type in
+     *  $element:   The JQuery selector of the HTML element to type in (in order for the cursor to work, needs to have css property of display: inline-block)
      *  color:      The CSS color property of the word
      *  speed:      The amount of time in miliseconds that should occur between each letter
-     *  cursor:     The CSS color property of the cursor
+     *  cursor:     A string containing the desired CSS color value of the cursor, or a boolean value of false if no cursor is desired
      *
      */
     autotype: function(word, $element, color, speed, cursor){
         
-    
+        //Handles the tick mark that visually indicates typing
+        var typeBorder = function($el, str, ticksLeft, cursor){
+            var css = "1px none white";
+            if($el.css('border-right').indexOf("none") != -1)
+                css = "1px solid " + cursor;
+            setTimeout(function(){
+                $el.css('border-right', css);
+                if(ticksLeft == undefined||ticksLeft > 0 || css != "1px none white"){
+                    if($el.text() != str)
+                        typeBorder($el, str, undefined, cursor);
+                    else if(ticksLeft == undefined && $el.text() == str)
+                        typeBorder($el, str, 3, cursor);
+                    else
+                        typeBorder($el, str, ticksLeft - 1, cursor);
+                }
+            }, 500);
+        };
+        
+        //Updates the text letter by letter to appear as if it is typing
+        var updateText = function(i, word, $el, speed){
+                setTimeout(function(){
+                        var temp = word.substring(0, i);
+                        $el.html(temp);
+                        if(i < word.length)
+                            updateText(i+1, word, $el, speed);
+                }, speed);
+            
+        };
+        if(cursor != false)
+            typeBorder($element, word, undefined, cursor);
+        updateText(1, word, $element, speed);
     },
     
     
@@ -67,15 +97,18 @@ var jswag = {
      */
     galleryView: function(path, $element, height, width){
         var display = function(images, data){
+            var $div = $("<div>");
+            $div.css('margin', '0 auto').css('float', 'middle');
+            $element.append($div);
             images.forEach(function(img){
                 var i = $("<img>");
                 if(height != undefined)
                     i.css('height', data.height + 'px');
                 if(width != undefined)
                     i.css('width', data.width + 'px')
-                i.css('margin', ' 10px 20px');
+                i.css('margin', '10px 20px');
                 i.attr('src', data.path + "/" + img.text);
-                $element.append(i);
+                $div.append(i);
             });
         };
         var data = {
@@ -110,5 +143,31 @@ var jswag = {
                 
             }  
         });
-    }
+    },
+    
+    /*
+     *  Uses a given HTML div to create a popover element
+     *  
+     *  $overlay:       A JQuery selector of an HTML script of type text/template that is being overlayed on the screen
+     *  close:          The ID of an element inside the overlay that, upon clicking, closes the popup
+     *  
+     */
+     popup: function($overlay, close){
+        var $div = $('<div>').attr('id', 'jswag_BackdropDimmer');
+        $div.css('width', '100vw').css('height', '100vh').css('position', 'fixed').css('background-color', 'rgba(25, 25, 25, .5)').css('z-index', '100');
+        
+        var $popup = $("<div>").css('position', 'fixed');
+        $popup.html($overlay.html()).attr('id', 'jswagPopoverHTML');
+        $div.append($popup);
+        $("html").prepend($div);
+        var h = $popup.css('height');
+        var w = $popup.css('width');
+        //$("#jswagPopoverHTML").css('left', 'calc(50% - ' + parseInt(w/2) +'px )').css('top', 'calc(50% - ' + parseInt(h/2) +'px )');
+        $("#jswagPopoverHTML").css('left', '50%').css('left', '-=' + parseInt(w)/2 + 'px').css('top', '50%').css('top', '-=' + parseInt(h)/2 + 'px');
+        $("#" + close).css('cursor', 'pointer').on('click', function(){
+            $("#jswag_BackdropDimmer").remove();
+        });
+         
+     },
+     
 };
