@@ -4,7 +4,7 @@
  *  functions that help a user to customize their page with some flashy features
  *
  *  Created by Jacob Justice
- *  Version 0.0.1
+ *  Version 0.0.5
  */
 
 var jswag = {
@@ -21,7 +21,7 @@ var jswag = {
      *
      */
     autotype: function(word, $element, color, speed, cursor, callback){
-        
+        $element.addClass("JSwagActive_AutoType");
         //Handles the tick mark that visually indicates typing
         var typeBorder = function($el, str, ticksLeft, cursor){
             var css = "1px none white";
@@ -38,7 +38,7 @@ var jswag = {
                         typeBorder($el, str, ticksLeft - 1, cursor);
                 }
                 else{
-                    if(typeof(callback) == "function")
+                    if(typeof(callback)  == "function")
                         callback();
                 }
             }, 500);
@@ -49,7 +49,7 @@ var jswag = {
                 setTimeout(function(){
                         var temp = word.substring(0, i);
                         $el.html(temp);
-                        if(i < word.length)
+                        if(i < word.length && $el.hasClass("JSwagActive_AutoType"))
                             updateText(i+1, word, $el, speed);
                 }, speed);
             
@@ -69,12 +69,14 @@ var jswag = {
      *  
      */
     autogallery: function(path, $element, speed){
+        $element.addClass("JSwagActive_AutoGallery");
         var queue = function(images, data){
                     $element.fadeOut('medium', function(){
                         var current = data.path + "/" + images[data.index].text;
                         $element.attr('src', current);
                         $element.fadeIn('meduim', function(){
                         data.index = (data.index >= images.length - 1) ? 0 : data.index + 1;
+                        if(data.$element.hasClass("JSwagActive_AutoGallery"))
                         setTimeout(function(){
                             queue(images, data);
                         }, data.speed);
@@ -110,7 +112,7 @@ var jswag = {
                 if(height != undefined)
                     i.css('height', data.height + 'px');
                 if(width != undefined)
-                    i.css('width', data.width + 'px')
+                    i.css('width', data.width + 'px');
                 i.css('margin', '10px 20px');
                 i.attr('src', data.path + "/" + img.text);
                 $div.append(i);
@@ -123,6 +125,56 @@ var jswag = {
             width: width
         };
         jswag.getImages(path, display, data);
+    },
+    
+    /*
+     *  Displays images fullscreen from a folderthat popup upon clicking an HTML element
+     *  
+     *  path:       The path of the image folder to display (string)
+     *  $element:   The JQuery selector of the HTML element to display the images upon clicking
+     *  
+     */
+    fullscreenGallery: function(path, $element){
+        $("#JSwagBackdropDimmer").remove();
+        var $div = $('<div>').attr('id', 'JSwagBackdropDimmer');
+        $div.css('width', '100vw').css('height', '100vh').css('position', 'fixed').css('background-color', 'rgba(25, 25, 25, .5)').css('z-index', '100');
+        var $close = $('<div>').attr('id', 'JSwagImageGalleryClose')
+        $close.css('cursor', 'pointer').css('font-size', '20px').css('background-color', 'gray').css('width', '25px').css('height', '25px').css('border-radius', '10px').css('position', 'absolute').css('top', '5px').css('right', '5px').css('text-align', 'center').html("X");
+        $div.append($close);
+        
+        $img = $("<img>").attr('id', 'JSwagImageGalleryImage');
+        $img.css('margin', '0 auto').css('vertical-align', 'middle').css('position', 'relative').css('max-width', '90%').css('max-height', '90%');
+        $div.append($img);
+        var setImage = function(imgs, data){
+            $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[0].text).attr('data-current', '0').attr('data-path', data.path);
+        };
+        jswag.getImages(path, setImage, {path: path});
+        
+        $left = $("<div>").attr('id', 'JSwagImageGalleryLeft').css('position', 'absolute').css('left', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html("<");
+        $right = $("<div>").attr('id', 'JSwagImageGalleryRight').css('position', 'absolute').css('right', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html(">");
+        $left.on('click', function(){
+            var newImageLeft = function(imgs, data){
+                var index = parseInt($("#JSwagImageGalleryImage").attr('data-current'));
+                index = index == 0 ? imgs.length - 1 : index - 1;
+                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index)
+            };
+            var path = $("#JSwagImageGalleryImage").attr('data-path');
+            jswag.getImages(path, newImageLeft, {path:path});
+        });
+        $right.on('click', function(){
+            var newImageRight = function(imgs, data){
+                var index = parseInt($("#JSwagImageGalleryImage").attr('data-current'));
+                index = index == imgs.length - 1 ? 0 : index + 1;
+                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index)
+            };
+            var path = $("#JSwagImageGalleryImage").attr('data-path');
+            jswag.getImages(path, newImageRight, {path:path});
+        });
+        $div.append($left).append($right);
+        $("html").prepend($div);
+        $("#JSwagImageGalleryClose").on('click', function(){
+            $("#JSwagBackdropDimmer").remove();
+        });
     },
     
     /*
@@ -158,19 +210,19 @@ var jswag = {
      *  
      */
      popup: function($overlay, close){
-        var $div = $('<div>').attr('id', 'jswag_BackdropDimmer');
+        $("#JSwagBackdropDimmer").remove();
+        var $div = $('<div>').attr('id', 'JSwagBackdropDimmer');
         $div.css('width', '100vw').css('height', '100vh').css('position', 'fixed').css('background-color', 'rgba(25, 25, 25, .5)').css('z-index', '100');
         
         var $popup = $("<div>").css('position', 'fixed');
-        $popup.html($overlay.html()).attr('id', 'jswagPopoverHTML');
+        $popup.html($overlay.html()).attr('id', 'JSwagPopoverHTML');
         $div.append($popup);
         $("html").prepend($div);
         var h = $popup.css('height');
         var w = $popup.css('width');
-        //$("#jswagPopoverHTML").css('left', 'calc(50% - ' + parseInt(w/2) +'px )').css('top', 'calc(50% - ' + parseInt(h/2) +'px )');
-        $("#jswagPopoverHTML").css('left', '50%').css('left', '-=' + parseInt(w)/2 + 'px').css('top', '50%').css('top', '-=' + parseInt(h)/2 + 'px');
+        $("#JSwagPopoverHTML").css('left', '50%').css('left', '-=' + parseInt(w)/2 + 'px').css('top', '50%').css('top', '-=' + parseInt(h)/2 + 'px');
         $("#" + close).css('cursor', 'pointer').on('click', function(){
-            $("#jswag_BackdropDimmer").remove();
+            $("#JSwagBackdropDimmer").remove();
         });
          
      },
