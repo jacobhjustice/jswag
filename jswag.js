@@ -1,3 +1,6 @@
+/* global $ */
+
+
 /*
  *  JSwag
  *  A JavaScript Library with various different utility
@@ -128,35 +131,36 @@ var jswag = {
     },
     
     /*
-     *  Displays images fullscreen from a folderthat popup upon clicking an HTML element
+     *  Displays images fullscreen from a folder
      *  
      *  path:       The path of the image folder to display (string)
-     *  $element:   The JQuery selector of the HTML element to display the images upon clicking
      *  
      */
-    fullscreenGallery: function(path, $element){
+    fullscreenGallery: function(path){
         $("#JSwagBackdropDimmer").remove();
         var $div = $('<div>').attr('id', 'JSwagBackdropDimmer');
         $div.css('width', '100vw').css('height', '100vh').css('position', 'fixed').css('background-color', 'rgba(25, 25, 25, .5)').css('z-index', '100');
-        var $close = $('<div>').attr('id', 'JSwagImageGalleryClose')
+        var $close = $('<div>').attr('id', 'JSwagImageGalleryClose');
         $close.css('cursor', 'pointer').css('font-size', '20px').css('background-color', 'gray').css('width', '25px').css('height', '25px').css('border-radius', '10px').css('position', 'absolute').css('top', '5px').css('right', '5px').css('text-align', 'center').html("X");
         $div.append($close);
-        
-        $img = $("<img>").attr('id', 'JSwagImageGalleryImage');
-        $img.css('margin', '0 auto').css('vertical-align', 'middle').css('position', 'relative').css('max-width', '90%').css('max-height', '90%');
+        var $img = $("<img>").attr('id', 'JSwagImageGalleryImage');
+        $img.css('margin', '0 auto').css('vertical-align', 'middle').css('position', 'absolute').css('width', '300px');
         $div.append($img);
+        $div.find("#JSwagImageGalleryImage").css('left', 'calc(50% - 150px)');
         var setImage = function(imgs, data){
-            $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[0].text).attr('data-current', '0').attr('data-path', data.path);
+            $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[0].text).attr('data-current', '0').attr('data-path', data.path).load(function(){
+                $("#JSwagImageGalleryImage").css('top', 'calc( 50% - ' + parseInt($("#JSwagImageGalleryImage").css('height'))/2 + 'px' + ' )');
+            });
         };
         jswag.getImages(path, setImage, {path: path});
         
-        $left = $("<div>").attr('id', 'JSwagImageGalleryLeft').css('position', 'absolute').css('left', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html("<");
-        $right = $("<div>").attr('id', 'JSwagImageGalleryRight').css('position', 'absolute').css('right', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html(">");
+        var $left = $("<div>").attr('id', 'JSwagImageGalleryLeft').css('position', 'absolute').css('left', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html("<");
+        var $right = $("<div>").attr('id', 'JSwagImageGalleryRight').css('position', 'absolute').css('right', '5px').css('top', 'calc(50% - 15px)').css('font-size', '30px').css('height', '30px').css('width', '30px').css('background-color', 'gray').css('text-align', 'center').css('cursor', 'pointer').html(">");
         $left.on('click', function(){
             var newImageLeft = function(imgs, data){
                 var index = parseInt($("#JSwagImageGalleryImage").attr('data-current'));
                 index = index == 0 ? imgs.length - 1 : index - 1;
-                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index)
+                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index);
             };
             var path = $("#JSwagImageGalleryImage").attr('data-path');
             jswag.getImages(path, newImageLeft, {path:path});
@@ -165,7 +169,7 @@ var jswag = {
             var newImageRight = function(imgs, data){
                 var index = parseInt($("#JSwagImageGalleryImage").attr('data-current'));
                 index = index == imgs.length - 1 ? 0 : index + 1;
-                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index)
+                $("#JSwagImageGalleryImage").attr('src', data.path + "/" + imgs[index].text).attr('data-current', index);
             };
             var path = $("#JSwagImageGalleryImage").attr('data-path');
             jswag.getImages(path, newImageRight, {path:path});
@@ -227,4 +231,26 @@ var jswag = {
          
      },
      
+     /*
+      *  Fills out a premade HTML template with information
+      *  
+      *  $template:         The JQuery selector of the HTML script of type "text/template". Fields should be formatted as {{objectProperty}}
+      *  templateObject:    An object containing data to will the template with.
+      *  
+      *  Example:   <script type="text/template" id="SampleTemplate"><h1>{{text}}</h1></script>
+      *             var html = jswag.templateHelper($("#SampleTemplate"), {text: "Test Template"});
+      *             //The above code sets var html to <h1>Test Template</h1>
+      *
+      */
+     templateHelper: function($template, templateObject){
+         var string = $template.html();
+         while(string.indexOf("{{") > 0 && string.indexOf("}}") > 0){
+             var start = string.indexOf("{{");
+             var finish = string.indexOf("}}");
+             var prop = string.substring(start + 2, finish);
+             var filler = templateObject[prop] != undefined ? templateObject[prop] : "";
+             string = string.substr(0, start) + filler + string.substr(finish + 2);
+         }
+         return string;
+     }
 };
