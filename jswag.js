@@ -105,7 +105,7 @@ var jswag = {
      *  width:      The width of each image in the gallery (integer)
      *  
      */
-    galleryView: function(path, $element, height, width){
+    inlineGallery: function(path, $element, height, width){
         var display = function(images, data){
             var $div = $("<div>");
             $div.css('margin', '0 auto').css('float', 'middle');
@@ -141,7 +141,7 @@ var jswag = {
         var $div = $('<div>').attr('id', 'JSwagBackdropDimmer');
         $div.css('width', '100vw').css('height', '100vh').css('position', 'fixed').css('background-color', 'rgba(25, 25, 25, .5)').css('z-index', '100');
         var $close = $('<div>').attr('id', 'JSwagImageGalleryClose');
-        $close.css('cursor', 'pointer').css('font-size', '20px').css('background-color', 'gray').css('width', '25px').css('height', '25px').css('border-radius', '10px').css('position', 'absolute').css('top', '5px').css('right', '5px').css('text-align', 'center').html("X");
+        $close.css('cursor', 'pointer').css('font-size', '20px').css('background-color', 'gray').css('width', '25px').css('height', '25px').css('border-radius', '10px').css('position', 'absolute').css('top', '5px').css('right', '25px').css('text-align', 'center').html("X");
         $div.append($close);
         var $img = $("<img>").attr('id', 'JSwagImageGalleryImage');
         $img.css('margin', '0 auto').css('vertical-align', 'middle').css('position', 'absolute').css('width', '300px');
