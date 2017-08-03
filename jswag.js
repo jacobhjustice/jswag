@@ -69,28 +69,42 @@ var jswag = {
      *  path:       The path of the image folder to display (string)
      *  $element:   The JQuery selector of the HTML element to display on
      *  speed:      The amount of time in miliseconds that should occur between each display (integer)
+     *  fade:       if left undefined, picture will just rotate, if given a value, picture will fade out into the next one (boolean)
      *  
      */
-    autogallery: function(path, $element, speed){
+    autogallery: function(path, $element, speed, fade){
         $element.addClass("JSwagActive_AutoGallery");
         var queue = function(images, data){
-                    $element.fadeOut('medium', function(){
+                    var callback = function(data){
                         var current = data.path + "/" + images[data.index].text;
-                        $element.attr('src', current);
-                        $element.fadeIn('meduim', function(){
-                        data.index = (data.index >= images.length - 1) ? 0 : data.index + 1;
-                        if(data.$element.hasClass("JSwagActive_AutoGallery"))
-                        setTimeout(function(){
-                            queue(images, data);
-                        }, data.speed);
+                        data.$element.attr('src', current);
+                        var callback2 = function(data){
+                            data.index = (data.index >= images.length - 1) ? 0 : data.index + 1;
+                            if(data.$element.hasClass("JSwagActive_AutoGallery"))
+                            setTimeout(function(){
+                                queue(images, data);
+                            }, data.speed);
+                        };
+                        if(data.fade)
+                        data.$element.fadeIn('meduim', function(){
+                            callback2(data);
+                        });
+                        else
+                            callback2(data);
+                    };
+                    if(data.fade)
+                    $element.fadeOut('medium', function(){
+                        callback(data);
                     });
-                });
+                    else    
+                        callback(data);
             };
             var data = {
                 path: path,
                 $element: $element,
                 speed: speed,
-                index: 0
+                index: 0,
+                fade: fade
             };
         jswag.getImages(path, queue, data);      
         
@@ -235,7 +249,7 @@ var jswag = {
       *  Fills out a premade HTML template with information
       *  
       *  $template:         The JQuery selector of the HTML script of type "text/template". Fields should be formatted as {{objectProperty}}
-      *  templateObject:    An object containing data to will the template with.
+      *  templateObject:    An object containing data to will the template with
       *  
       *  Example:   <script type="text/template" id="SampleTemplate"><h1>{{text}}</h1></script>
       *             var html = jswag.templateHelper($("#SampleTemplate"), {text: "Test Template"});
